@@ -1,0 +1,212 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { createClient } from "@/lib/supabase/client"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { MoreHorizontal, Calendar, Trash2 } from "lucide-react"
+import { formatDistanceToNow, format } from "date-fns"
+
+interface Concept {
+  id: string
+  title: string
+  description: string | null
+  category: string
+  status: "pending" | "in_progress" | "completed" | "cancelled"
+  priority: "low" | "medium" | "high" | "urgent"
+  due_date: string | null
+  created_at: string
+  updated_at: string
+}
+
+interface ConceptListProps {
+  initialConcepts: Concept[]
+  userId: string
+}
+
+export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
+  const [concepts, setConcepts] = useState<Concept[]>(initialConcepts)
+  const supabase = createClient()
+
+  useEffect(() => {
+    // Set up real-time subscription
+    const channel = supabase
+      .channel("concepts-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "concepts",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            setConcepts((prev) => [payload.new as Concept, ...prev])
+          } else if (payload.eventType === "UPDATE") {
+            setConcepts((prev) =>
+              prev.map((concept) => (concept.id === payload.new.id ? (payload.new as Concept) : concept)),
+            )
+          } else if (payload.eventType === "DELETE") {
+            setConcepts((prev) => prev.filter((concept) => concept.id !== payload.old.id))
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [supabase, userId])
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "urgent":
+        return "bg-red-500/10 text-red-500 border-red-500/20"
+      case "high":
+        return "bg-orange-500/10 text-orange-500 border-orange-500/20"
+      case "medium":
+        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
+      case "low":
+        return "bg-green-500/10 text-green-500 border-green-500/20"
+      default:
+        return "bg-muted text-muted-foreground"
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-500/10 text-green-500 border-green-500/20"
+      case "in_progress":
+        return "bg-blue-500/10 text-blue-500 border-blue-500/20"
+      case "pending":
+        return "bg-gray-500/10 text-gray-500 border-gray-500/20"
+      case "cancelled":
+        return "bg-red-500/10 text-red-500 border-red-500/20"
+      default:
+        return "bg-muted text-muted-foreground"
+    }
+  }
+
+  const updateConceptStatus = async (conceptId: string, newStatus: string) => {
+    const { error } = await supabase
+      .from("concepts")
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq("id", conceptId)
+
+    if (error) {
+      console.error("Error updating concept:", error)
+    }
+  }
+
+  const deleteConcept = async (conceptId: string) => {
+    const { error } = await supabase.from("concepts").delete().eq("id", conceptId)
+
+    if (error) {
+      console.error("Error deleting concept:", error)
+    }
+  }
+
+  if (concepts.length === 0) {
+    return (
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto">
+              <Calendar className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">No concepts yet</h3>
+              <p className="text-muted-foreground">Create your first micro concept to get started</p>
+            </div>
+            <Button
+              onClick={() => {
+                const event = new CustomEvent("openConceptModal")
+                window.dispatchEvent(event)
+              }}
+              className="transition-all duration-200 hover:scale-105"
+            >
+              Create Concept
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Your Concepts</h2>
+        <Badge variant="secondary" className="bg-primary/10 text-primary">
+          {concepts.length} total
+        </Badge>
+      </div>
+
+      <div className="grid gap-4">
+        {concepts.map((concept) => (
+          <Card
+            key={concept.id}
+            className="border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-200 hover:shadow-lg hover:scale-[1.01]"
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2 flex-1 min-w-0">
+                  <CardTitle className="text-lg leading-tight">{concept.title}</CardTitle>
+                  {concept.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">{concept.description}</p>
+                  )}
+                  {concept.due_date && (
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <Calendar className="w-3 h-3 mr-1 flex-shrink-0" />
+                      <span className="truncate">Due: {format(new Date(concept.due_date), "MMM d, yyyy")}</span>
+                    </div>
+                  )}
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => updateConceptStatus(concept.id, "pending")}>
+                      Mark as Pending
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => updateConceptStatus(concept.id, "in_progress")}>
+                      Mark as In Progress
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => updateConceptStatus(concept.id, "completed")}>
+                      Mark as Completed
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive" onClick={() => deleteConcept(concept.id)}>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-center flex-wrap gap-2">
+                  <Badge className={getPriorityColor(concept.priority)}>{concept.priority}</Badge>
+                  <Badge className={getStatusColor(concept.status)}>{concept.status.replace("_", " ")}</Badge>
+                  <Badge variant="outline" className="text-xs capitalize">
+                    {concept.category}
+                  </Badge>
+                </div>
+                <div className="text-xs text-muted-foreground sm:text-right">
+                  {formatDistanceToNow(new Date(concept.created_at), { addSuffix: true })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  )
+}

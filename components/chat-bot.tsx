@@ -69,7 +69,7 @@ export function ChatBot({ userId }: ChatBotProps) {
   }
 
   const sendMessage = async () => {
-    if (!input.trim()) return
+    if (!input.trim() || isLoading) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -86,20 +86,22 @@ export function ChatBot({ userId }: ChatBotProps) {
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: currentInput,
-          concepts: concepts.slice(0, 10), // Send recent concepts for context
+          concepts: concepts.slice(0, 10),
           userId,
         }),
       })
 
-      if (!response.ok) throw new Error("Failed to send message")
+      if (!response.ok) {
+        throw new Error(`Failed to send message (${response.status})`)
+      }
 
-      const reader = response.body?.getReader()
-      if (!reader) throw new Error("No response body")
+      const body = response.body
+      if (!body) {
+        throw new Error("No response body")
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -107,29 +109,35 @@ export function ChatBot({ userId }: ChatBotProps) {
         role: "assistant",
         timestamp: new Date(),
       }
-
       setMessages((prev) => [...prev, assistantMessage])
 
+      const reader = body.getReader()
       const decoder = new TextDecoder()
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const chunk = decoder.decode(value, { stream: true })
-        assistantMessage.content += chunk
-        setMessages((prev) => prev.map((msg) => (msg.id === assistantMessage.id ? { ...assistantMessage } : msg)))
+      try {
+        // read until done
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          const chunk = decoder.decode(value, { stream: true })
+          if (chunk) {
+            assistantMessage.content += chunk
+            setMessages((prev) => prev.map((m) => (m.id === assistantMessage.id ? { ...assistantMessage } : m)))
+          }
+        }
+      } finally {
+        try {
+          reader.releaseLock()
+        } catch {}
       }
 
-      if (
-        assistantMessage.content.toLowerCase().includes("create") &&
-        assistantMessage.content.toLowerCase().includes("concept")
-      ) {
+      // Optional lightweight suggestion inference
+      const lower = assistantMessage.content.toLowerCase()
+      if (lower.includes("create") && lower.includes("concept")) {
         assistantMessage.suggestions = ["Create this concept", "Tell me more", "What's next?"]
-        setMessages((prev) => prev.map((msg) => (msg.id === assistantMessage.id ? { ...assistantMessage } : msg)))
+        setMessages((prev) => prev.map((m) => (m.id === assistantMessage.id ? { ...assistantMessage } : m)))
       }
     } catch (error) {
-      console.error("Error sending message:", error)
+      console.error("[v0] Error sending message:", error)
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: "Sorry, I'm having trouble responding right now. Please try again later.",

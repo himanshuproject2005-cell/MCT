@@ -85,7 +85,7 @@ export default function LoginPage() {
             </form>
             <div className="mt-6 text-center text-sm">
               <span className="text-muted-foreground">Don't have an account? </span>
-              <Link href="/auth/signup" className="text-primary hover:underline transition-colors duration-200">
+              <Link href="/auth/sign-up" className="text-primary hover:underline transition-colors duration-200">
                 Sign up
               </Link>
             </div>

@@ -38,6 +38,10 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
     }
   }, [])
 
+  useEffect(() => {
+    setConcepts(initialConcepts)
+  }, [initialConcepts])
+
   const refreshConcepts = async () => {
     if (!supabase) return
 

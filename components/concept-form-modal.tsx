@@ -10,10 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CalendarIcon, Loader2 } from "lucide-react"
-import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 
 interface ConceptFormModalProps {
@@ -208,31 +205,22 @@ export function ConceptFormModal({ userId, onConceptCreated }: ConceptFormModalP
 
           <div className="space-y-2">
             <Label>Due Date (Optional)</Label>
-            <Popover modal={false}>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal transition-all duration-200",
-                    !formData.dueDate && "text-muted-foreground",
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.dueDate ? format(formData.dueDate, "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
-                <Calendar
-                  mode="single"
-                  selected={formData.dueDate}
-                  onSelect={(date) => setFormData((prev) => ({ ...prev, dueDate: date }))}
-                  disabled={(date) => date < new Date()}
-                  initialFocus
-                  className="rounded-md border"
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="relative">
+              <Input
+                type="date"
+                value={formData.dueDate ? new Date(formData.dueDate).toISOString().slice(0, 10) : ""}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({
+                    ...prev,
+                    dueDate: val ? new Date(val + "T00:00:00") : undefined,
+                  }))
+                }}
+                min={new Date().toISOString().slice(0, 10)}
+                className="transition-all duration-200"
+              />
+              <CalendarIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            </div>
           </div>
 
           {errors.submit && (

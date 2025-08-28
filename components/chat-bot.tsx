@@ -264,7 +264,12 @@ export function ChatBot({ userId }: ChatBotProps) {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                sendMessage()
+              }
+            }}
             placeholder="Ask me anything..."
             disabled={isLoading}
             className="flex-1 text-sm"

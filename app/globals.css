@@ -1,7 +1,9 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+/* remove problematic imports/variants that can trigger parser errors and keep Tailwind v4 baseline clean */
+/* Removed @import "tw-animate-css"; and @custom-variant line. Kept Tailwind and theme variables intact. */
 
-@custom-variant dark (&:is(.dark *));
+@import "tailwindcss";
+/* removed: @import "tw-animate-css"; */
+/* removed: @custom-variant dark (&:is(.dark *)); */
 
 :root {
   --background: oklch(1 0 0);

@@ -29,11 +29,21 @@ interface ConceptListProps {
 export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
   const [concepts, setConcepts] = useState<Concept[]>(initialConcepts)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const supabase = createClient()
+  const [supabase, setSupabase] = useState<any>(null)
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const client = createClient()
+      setSupabase(client)
+    }
+  }, [])
 
   const refreshConcepts = async () => {
+    if (!supabase) return
+
     setIsRefreshing(true)
     try {
+      console.log("[v0] Refreshing concepts...")
       const { data, error } = await supabase
         .from("concepts")
         .select("*")
@@ -42,48 +52,60 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
 
       if (error) throw error
       setConcepts(data || [])
+      console.log("[v0] Concepts refreshed:", data?.length || 0)
     } catch (error) {
-      console.error("Error refreshing concepts:", error)
+      console.error("[v0] Error refreshing concepts:", error)
     } finally {
       setIsRefreshing(false)
     }
   }
 
   useEffect(() => {
-    const channel = supabase
-      .channel("concepts-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "concepts",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          console.log("[v0] Real-time update received:", payload.eventType)
-          if (payload.eventType === "INSERT") {
-            setConcepts((prev) => [payload.new as Concept, ...prev])
-          } else if (payload.eventType === "UPDATE") {
-            setConcepts((prev) =>
-              prev.map((concept) => (concept.id === payload.new.id ? (payload.new as Concept) : concept)),
-            )
-          } else if (payload.eventType === "DELETE") {
-            setConcepts((prev) => prev.filter((concept) => concept.id !== payload.old.id))
-          }
-          setTimeout(refreshConcepts, 1000)
-        },
-      )
-      .subscribe()
+    if (!supabase || typeof window === "undefined") return
 
-    const handleRefresh = () => {
-      refreshConcepts()
-    }
-    window.addEventListener("refreshConcepts", handleRefresh)
+    console.log("[v0] Setting up real-time subscription...")
 
-    return () => {
-      supabase.removeChannel(channel)
-      window.removeEventListener("refreshConcepts", handleRefresh)
+    try {
+      const channel = supabase
+        .channel("concepts-changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "concepts",
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload) => {
+            console.log("[v0] Real-time update received:", payload.eventType)
+            if (payload.eventType === "INSERT") {
+              setConcepts((prev) => [payload.new as Concept, ...prev])
+            } else if (payload.eventType === "UPDATE") {
+              setConcepts((prev) =>
+                prev.map((concept) => (concept.id === payload.new.id ? (payload.new as Concept) : concept)),
+              )
+            } else if (payload.eventType === "DELETE") {
+              setConcepts((prev) => prev.filter((concept) => concept.id !== payload.old.id))
+            }
+            setTimeout(refreshConcepts, 1000)
+          },
+        )
+        .subscribe((status) => {
+          console.log("[v0] Subscription status:", status)
+        })
+
+      const handleRefresh = () => {
+        refreshConcepts()
+      }
+      window.addEventListener("refreshConcepts", handleRefresh)
+
+      return () => {
+        console.log("[v0] Cleaning up subscription...")
+        supabase.removeChannel(channel)
+        window.removeEventListener("refreshConcepts", handleRefresh)
+      }
+    } catch (error) {
+      console.error("[v0] Error setting up real-time subscription:", error)
     }
   }, [supabase, userId])
 
@@ -118,7 +140,10 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
   }
 
   const updateConceptStatus = async (conceptId: string, newStatus: string) => {
+    if (!supabase) return
+
     try {
+      console.log("[v0] Updating concept status:", conceptId, newStatus)
       const { error } = await supabase
         .from("concepts")
         .update({ status: newStatus, updated_at: new Date().toISOString() })
@@ -128,18 +153,21 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
 
       setTimeout(refreshConcepts, 500)
     } catch (error) {
-      console.error("Error updating concept:", error)
+      console.error("[v0] Error updating concept:", error)
     }
   }
 
   const deleteConcept = async (conceptId: string) => {
+    if (!supabase) return
+
     try {
+      console.log("[v0] Deleting concept:", conceptId)
       const { error } = await supabase.from("concepts").delete().eq("id", conceptId)
       if (error) throw error
 
       setTimeout(refreshConcepts, 500)
     } catch (error) {
-      console.error("Error deleting concept:", error)
+      console.error("[v0] Error deleting concept:", error)
     }
   }
 

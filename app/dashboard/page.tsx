@@ -43,7 +43,12 @@ export default async function DashboardPage() {
         </div>
       </main>
 
-      <ConceptFormModal userId={data.user.id} />
+      <ConceptFormModal
+        userId={data.user.id}
+        onConceptCreated={() => {
+          // This will be handled by the custom event in the modal
+        }}
+      />
     </div>
   )
 }

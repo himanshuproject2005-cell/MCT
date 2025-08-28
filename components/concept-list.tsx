@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Calendar, Trash2 } from "lucide-react"
+import { MoreHorizontal, Calendar, Trash2, RefreshCw } from "lucide-react"
 import { formatDistanceToNow, format } from "date-fns"
 
 interface Concept {
@@ -28,10 +28,28 @@ interface ConceptListProps {
 
 export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
   const [concepts, setConcepts] = useState<Concept[]>(initialConcepts)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const supabase = createClient()
 
+  const refreshConcepts = async () => {
+    setIsRefreshing(true)
+    try {
+      const { data, error } = await supabase
+        .from("concepts")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+
+      if (error) throw error
+      setConcepts(data || [])
+    } catch (error) {
+      console.error("Error refreshing concepts:", error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
   useEffect(() => {
-    // Set up real-time subscription
     const channel = supabase
       .channel("concepts-changes")
       .on(
@@ -43,6 +61,7 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
+          console.log("[v0] Real-time update received:", payload.eventType)
           if (payload.eventType === "INSERT") {
             setConcepts((prev) => [payload.new as Concept, ...prev])
           } else if (payload.eventType === "UPDATE") {
@@ -52,12 +71,19 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
           } else if (payload.eventType === "DELETE") {
             setConcepts((prev) => prev.filter((concept) => concept.id !== payload.old.id))
           }
+          setTimeout(refreshConcepts, 1000)
         },
       )
       .subscribe()
 
+    const handleRefresh = () => {
+      refreshConcepts()
+    }
+    window.addEventListener("refreshConcepts", handleRefresh)
+
     return () => {
       supabase.removeChannel(channel)
+      window.removeEventListener("refreshConcepts", handleRefresh)
     }
   }, [supabase, userId])
 
@@ -92,20 +118,27 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
   }
 
   const updateConceptStatus = async (conceptId: string, newStatus: string) => {
-    const { error } = await supabase
-      .from("concepts")
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
-      .eq("id", conceptId)
+    try {
+      const { error } = await supabase
+        .from("concepts")
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq("id", conceptId)
 
-    if (error) {
+      if (error) throw error
+
+      setTimeout(refreshConcepts, 500)
+    } catch (error) {
       console.error("Error updating concept:", error)
     }
   }
 
   const deleteConcept = async (conceptId: string) => {
-    const { error } = await supabase.from("concepts").delete().eq("id", conceptId)
+    try {
+      const { error } = await supabase.from("concepts").delete().eq("id", conceptId)
+      if (error) throw error
 
-    if (error) {
+      setTimeout(refreshConcepts, 500)
+    } catch (error) {
       console.error("Error deleting concept:", error)
     }
   }
@@ -141,9 +174,14 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Your Concepts</h2>
-        <Badge variant="secondary" className="bg-primary/10 text-primary">
-          {concepts.length} total
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="bg-primary/10 text-primary">
+            {concepts.length} total
+          </Badge>
+          <Button variant="ghost" size="sm" onClick={refreshConcepts} disabled={isRefreshing} className="h-8 w-8 p-0">
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4">
@@ -166,23 +204,52 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
                     </div>
                   )}
                 </div>
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted/50"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <MoreHorizontal className="h-4 w-4" />
+                      <span className="sr-only">Open menu</span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => updateConceptStatus(concept.id, "pending")}>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        updateConceptStatus(concept.id, "pending")
+                      }}
+                    >
                       Mark as Pending
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => updateConceptStatus(concept.id, "in_progress")}>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        updateConceptStatus(concept.id, "in_progress")
+                      }}
+                    >
                       Mark as In Progress
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => updateConceptStatus(concept.id, "completed")}>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        updateConceptStatus(concept.id, "completed")
+                      }}
+                    >
                       Mark as Completed
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive" onClick={() => deleteConcept(concept.id)}>
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (confirm("Are you sure you want to delete this concept?")) {
+                          deleteConcept(concept.id)
+                        }
+                      }}
+                    >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Delete
                     </DropdownMenuItem>

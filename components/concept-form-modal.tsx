@@ -112,7 +112,9 @@ export function ConceptFormModal({ userId, onConceptCreated }: ConceptFormModalP
       })
       setErrors({})
       setIsOpen(false)
+
       onConceptCreated?.()
+      window.dispatchEvent(new CustomEvent("refreshConcepts"))
     } catch (error) {
       console.error("Error creating concept:", error)
       setErrors({ submit: "Failed to create concept. Please try again." })
@@ -206,9 +208,10 @@ export function ConceptFormModal({ userId, onConceptCreated }: ConceptFormModalP
 
           <div className="space-y-2">
             <Label>Due Date (Optional)</Label>
-            <Popover>
+            <Popover modal={false}>
               <PopoverTrigger asChild>
                 <Button
+                  type="button"
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal transition-all duration-200",
@@ -219,13 +222,14 @@ export function ConceptFormModal({ userId, onConceptCreated }: ConceptFormModalP
                   {formData.dueDate ? format(formData.dueDate, "PPP") : "Pick a date"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
                 <Calendar
                   mode="single"
                   selected={formData.dueDate}
                   onSelect={(date) => setFormData((prev) => ({ ...prev, dueDate: date }))}
                   disabled={(date) => date < new Date()}
                   initialFocus
+                  className="rounded-md border"
                 />
               </PopoverContent>
             </Popover>

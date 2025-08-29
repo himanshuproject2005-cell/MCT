@@ -220,9 +220,9 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
         {concepts.map((concept) => (
           <Card
             key={concept.id}
-            className="border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-200 hover:shadow-lg hover:scale-[1.01]"
+            className="border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-200 hover:shadow-lg hover:scale-[1.01] overflow-visible"
           >
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 overflow-visible">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-2 flex-1 min-w-0">
                   <CardTitle className="text-lg leading-tight">{concept.title}</CardTitle>
@@ -241,14 +241,14 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted/50"
+                      className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted/50 relative z-40"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <MoreHorizontal className="h-4 w-4" />
                       <span className="sr-only">Open menu</span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuContent align="end" sideOffset={8} className="w-48 z-50">
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation()

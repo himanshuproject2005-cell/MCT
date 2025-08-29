@@ -74,7 +74,7 @@ export default async function DashboardPage() {
             </div>
 
             <div className="lg:col-span-1 order-first lg:order-last">
-              <div className="lg:sticky lg:top-8">
+              <div className="lg:sticky lg:top-8 overflow-visible">
                 <ChatBot userId={data.user.id} />
               </div>
             </div>

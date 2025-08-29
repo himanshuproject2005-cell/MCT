@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -47,12 +46,17 @@ export function ChatBot({ userId }: ChatBotProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [concepts, setConcepts] = useState<Concept[]>([])
   const supabase = createClient()
+  const endRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (userId) {
       fetchConcepts()
     }
   }, [userId])
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end" })
+  }, [messages])
 
   const fetchConcepts = async () => {
     if (!userId) return
@@ -184,7 +188,7 @@ export function ChatBot({ userId }: ChatBotProps) {
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col space-y-4 p-3 lg:p-4">
+      <CardContent className="flex-1 flex flex-col space-y-4 p-3 lg:p-4 min-h-0">
         <div className="flex flex-wrap gap-2">
           {quickActions.map((action, index) => (
             <Button
@@ -200,7 +204,7 @@ export function ChatBot({ userId }: ChatBotProps) {
           ))}
         </div>
 
-        <ScrollArea className="flex-1 pr-2 lg:pr-4">
+        <ScrollArea className="flex-1 min-h-0 overflow-y-auto pr-2 lg:pr-4">
           <div className="space-y-4">
             {messages.map((message) => (
               <div key={message.id} className="space-y-2">
@@ -265,6 +269,7 @@ export function ChatBot({ userId }: ChatBotProps) {
                 </div>
               </div>
             )}
+            <div ref={endRef} className="h-0" />
           </div>
         </ScrollArea>
 

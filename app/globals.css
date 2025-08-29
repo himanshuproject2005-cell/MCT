@@ -6,96 +6,98 @@
 /* removed: @custom-variant dark (&:is(.dark *)); */
 
 :root {
-  --background: #fff8f0;
-  --foreground: #000505;
+  /* Light tokens (kept for completeness, app runs in dark by default) */
+  --background: #0b0b0c;
+  --foreground: #edeff1;
 
-  --card: #fff8f0;
-  --card-foreground: #000505;
+  --card: #0f1012;
+  --card-foreground: #edeff1;
 
-  --popover: #fff8f0;
-  --popover-foreground: #000505;
+  --popover: #0f1012;
+  --popover-foreground: #edeff1;
 
-  /* Set purple as the primary brand color */
-  --primary: #ae00b8;
-  --primary-foreground: #fff8f0;
+  --primary: #ae00b8; /* purple as primary */
+  --primary-foreground: #fff8f0; /* readable on purple */
 
-  --secondary: #7a9b76;
-  --secondary-foreground: #fff8f0;
+  --secondary: #2b2f36; /* slate */
+  --secondary-foreground: #edeff1;
 
-  --muted: #fff8f0;
-  --muted-foreground: #000505;
+  --muted: #1a1c1e; /* darker slate */
+  --muted-foreground: #aab0b6;
 
-  --accent: #ae00b8;
-  --accent-foreground: #fff8f0;
+  --accent: #2b2f36;
+  --accent-foreground: #edeff1;
 
   --destructive: #ae00b8;
   --destructive-foreground: #fff8f0;
 
-  --border: #7a9b76;
-  --input: #7a9b76;
+  --border: #2b2f36;
+  --input: #2b2f36;
   --ring: #ae00b8;
 
-  --chart-1: #7a9b76;
-  --chart-2: #ae00b8;
-  --chart-3: #000505;
-  --chart-4: #fff8f0;
-  --chart-5: #7a9b76;
+  --chart-1: #ae00b8;
+  --chart-2: #2b2f36;
+  --chart-3: #1a1c1e;
+  --chart-4: #edeff1;
+  --chart-5: #5a5f69;
 
   --radius: 0.625rem;
 
-  --sidebar: #fff8f0;
-  --sidebar-foreground: #000505;
-  --sidebar-primary: #7a9b76;
+  --sidebar: #0f1012;
+  --sidebar-foreground: #edeff1;
+  --sidebar-primary: #ae00b8;
   --sidebar-primary-foreground: #fff8f0;
-  --sidebar-accent: #ae00b8;
-  --sidebar-accent-foreground: #fff8f0;
-  --sidebar-border: #7a9b76;
+  --sidebar-accent: #2b2f36;
+  --sidebar-accent-foreground: #edeff1;
+  --sidebar-border: #2b2f36;
   --sidebar-ring: #ae00b8;
 }
 
 .dark {
-  --background: #000505;
-  --foreground: #fff8f0;
+  /* Dark mode mirrors root (the app is dark-first) */
+  --background: #0b0b0c;
+  --foreground: #edeff1;
 
-  --card: #000505;
-  --card-foreground: #fff8f0;
+  --card: #0f1012;
+  --card-foreground: #edeff1;
 
-  --popover: #000505;
-  --popover-foreground: #fff8f0;
+  --popover: #0f1012;
+  --popover-foreground: #edeff1;
 
-  /* Set purple as the primary brand color in dark mode */
   --primary: #ae00b8;
   --primary-foreground: #fff8f0;
 
-  --secondary: #7a9b76;
-  --secondary-foreground: #fff8f0;
+  --secondary: #2b2f36;
+  --secondary-foreground: #edeff1;
 
-  --muted: #000505;
-  --muted-foreground: #fff8f0;
+  --muted: #1a1c1e;
+  --muted-foreground: #aab0b6;
 
-  --accent: #ae00b8;
-  --accent-foreground: #fff8f0;
+  --accent: #2b2f36;
+  --accent-foreground: #edeff1;
 
   --destructive: #ae00b8;
   --destructive-foreground: #fff8f0;
 
-  --border: #7a9b76;
-  --input: #7a9b76;
+  --border: #2b2f36;
+  --input: #2b2f36;
   --ring: #ae00b8;
 
-  --chart-1: #7a9b76;
-  --chart-2: #ae00b8;
-  --chart-3: #fff8f0;
-  --chart-4: #000505;
-  --chart-5: #7a9b76;
+  --chart-1: #ae00b8;
+  --chart-2: #2b2f36;
+  --chart-3: #1a1c1e;
+  --chart-4: #edeff1;
+  --chart-5: #5a5f69;
 
-  --sidebar: #000505;
-  --sidebar-foreground: #fff8f0;
-  --sidebar-primary: #7a9b76;
+  --radius: 0.625rem;
+
+  --sidebar: #0f1012;
+  --sidebar-foreground: #edeff1;
+  --sidebar-primary: #ae00b8;
   --sidebar-primary-foreground: #fff8f0;
-  --sidebar-accent: #ae00b8;
-  --sidebar-accent-foreground: #fff8f0;
-  --sidebar-border: #7a9b76;
+  --sidebar-accent: #2b2f36;
+  --sidebar-accent-foreground: #edeff1;
+  --sidebar-border: #2b2f36;
   --sidebar-ring: #ae00b8;
 }
 

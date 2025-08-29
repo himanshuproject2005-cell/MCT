@@ -245,6 +245,7 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted/50 relative z-40"
@@ -255,16 +256,13 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
                     </Button>
                   </DropdownMenuTrigger>
 
-                  <DropdownMenuPortal>
+                  <DropdownMenuPortal forceMount>
                     <DropdownMenuContent
                       align="end"
+                      side="bottom"
                       sideOffset={8}
-                      collisionPadding={8}
-                      className="w-48 z-[70]"
-                      onPointerDownOutside={(e) => {
-                        // prevent outside pointer events from being swallowed by transformed parents
-                        e.preventDefault()
-                      }}
+                      collisionPadding={12}
+                      className="w-48 z-[9999] will-change-transform"
                     >
                       <DropdownMenuItem
                         onClick={(e) => {

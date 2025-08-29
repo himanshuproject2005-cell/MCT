@@ -248,7 +248,7 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted/50 relative z-40"
+                      className="h-8 w-8 p-0 flex-shrink-0 hover:bg-muted/50 relative z-100"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <MoreHorizontal className="h-4 w-4" />

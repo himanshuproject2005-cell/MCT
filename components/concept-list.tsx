@@ -5,7 +5,13 @@ import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuPortal,
+} from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Calendar, Trash2, RefreshCw } from "lucide-react"
 import { formatDistanceToNow, format } from "date-fns"
 
@@ -220,7 +226,7 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
         {concepts.map((concept) => (
           <Card
             key={concept.id}
-            className="border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-200 hover:shadow-lg hover:scale-[1.01] overflow-visible"
+            className="relative z-10 border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-200 hover:shadow-lg hover:scale-[1.01] overflow-visible"
           >
             <CardHeader className="pb-3 overflow-visible">
               <div className="flex items-start justify-between gap-4">
@@ -248,44 +254,56 @@ export function ConceptList({ initialConcepts, userId }: ConceptListProps) {
                       <span className="sr-only">Open menu</span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" sideOffset={8} className="w-48 z-50">
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        updateConceptStatus(concept.id, "pending")
+
+                  <DropdownMenuPortal>
+                    <DropdownMenuContent
+                      align="end"
+                      sideOffset={8}
+                      collisionPadding={8}
+                      className="w-48 z-[70]"
+                      onPointerDownOutside={(e) => {
+                        // prevent outside pointer events from being swallowed by transformed parents
+                        e.preventDefault()
                       }}
                     >
-                      Mark as Pending
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        updateConceptStatus(concept.id, "in_progress")
-                      }}
-                    >
-                      Mark as In Progress
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        updateConceptStatus(concept.id, "completed")
-                      }}
-                    >
-                      Mark as Completed
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        if (confirm("Are you sure you want to delete this concept?")) {
-                          deleteConcept(concept.id)
-                        }
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          updateConceptStatus(concept.id, "pending")
+                        }}
+                      >
+                        Mark as Pending
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          updateConceptStatus(concept.id, "in_progress")
+                        }}
+                      >
+                        Mark as In Progress
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          updateConceptStatus(concept.id, "completed")
+                        }}
+                      >
+                        Mark as Completed
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (confirm("Are you sure you want to delete this concept?")) {
+                            deleteConcept(concept.id)
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenuPortal>
                 </DropdownMenu>
               </div>
             </CardHeader>

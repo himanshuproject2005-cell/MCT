@@ -15,7 +15,8 @@
   --popover: #fff8f0;
   --popover-foreground: #000505;
 
-  --primary: #7a9b76;
+  /* Set purple as the primary brand color */
+  --primary: #ae00b8;
   --primary-foreground: #fff8f0;
 
   --secondary: #7a9b76;
@@ -62,7 +63,8 @@
   --popover: #000505;
   --popover-foreground: #fff8f0;
 
-  --primary: #7a9b76;
+  /* Set purple as the primary brand color in dark mode */
+  --primary: #ae00b8;
   --primary-foreground: #fff8f0;
 
   --secondary: #7a9b76;
